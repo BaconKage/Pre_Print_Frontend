@@ -1,13 +1,30 @@
 import { useState } from 'react';
-import { Calendar, Tag, User, BookOpen, FileText, ExternalLink, Download, X } from 'lucide-react';
+import {
+  Calendar,
+  Tag,
+  User,
+  BookOpen,
+  FileText,
+  ExternalLink,
+  Download,
+  X,
+  Trash2,
+} from 'lucide-react';
 import { Preprint } from '../api/preprints';
+
+const API_BASE =
+  import.meta.env.VITE_API_URL?.toString().replace(/\/+$/, '') ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
 
 interface PreprintDetailsProps {
   preprint: Preprint | null;
+  adminKey?: string | null;
+  onDeleted?: (id: number) => void;
 }
 
-export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
+export default function PreprintDetails({ preprint, adminKey, onDeleted }: PreprintDetailsProps) {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!preprint) {
     return (
@@ -29,17 +46,47 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
   /** ✅ LOCAL DATE (NO TIME) */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
   /** ✅ ENSURE PDF URL IS HTTPS */
   const pdfUrl = preprint.pdf_file
-    ? preprint.pdf_file.replace("http://", "https://")
+    ? preprint.pdf_file.replace('http://', 'https://')
     : null;
+
+  const handleDelete = async () => {
+    if (!adminKey) return;
+    const sure = window.confirm(
+      `Delete "${preprint.title}"?\nThis will permanently remove the entry and its PDF.`
+    );
+    if (!sure) return;
+
+    try {
+      setDeleting(true);
+      const res = await fetch(`${API_BASE}/api/admin/preprints/${preprint.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-ADMIN-KEY': adminKey,
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete preprint');
+      }
+
+      onDeleted?.(preprint.id);
+      setShowPdfViewer(false);
+    } catch (err: any) {
+      alert(err?.message || 'Error deleting preprint');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-950">
@@ -49,7 +96,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             {preprint.title}
           </h1>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-200 px-3 py-1.5 rounded-full border border-blue-500/40 font-medium shadow-sm shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 transition-all">
               {preprint.category.toUpperCase()}
             </span>
@@ -67,6 +114,19 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             <span className="text-xs bg-gradient-to-r from-orange-500/30 to-amber-600/20 text-orange-200 px-3 py-1.5 rounded-full border border-orange-500/40 capitalize font-medium shadow-sm shadow-orange-500/10">
               {preprint.status}
             </span>
+
+            {/* 🔐 Admin-only delete pill (top-rightish, subtle) */}
+            {adminKey && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="ml-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] text-red-200 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              >
+                <Trash2 className="w-3 h-3" />
+                {deleting ? 'Deleting…' : 'Delete preprint'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -75,7 +135,9 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             <div className="glass-effect border-white/20 rounded-lg p-4 hover:border-blue-400/50 hover:bg-blue-500/5 transition-all group">
               <div className="flex items-center gap-2 text-blue-300 mb-2">
                 <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Authors</span>
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Authors
+                </span>
               </div>
               <p className="text-sm text-white">{preprint.authors}</p>
             </div>
@@ -85,7 +147,9 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             <div className="glass-effect border-white/20 rounded-lg p-4 hover:border-blue-400/50 hover:bg-blue-500/5 transition-all group">
               <div className="flex items-center gap-2 text-blue-300 mb-2">
                 <BookOpen className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Faculty Guide</span>
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Faculty Guide
+                </span>
               </div>
               <p className="text-sm text-white">{preprint.faculty}</p>
             </div>
@@ -95,7 +159,9 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             <div className="glass-effect border-white/20 rounded-lg p-4 hover:border-blue-400/50 hover:bg-blue-500/5 transition-all group">
               <div className="flex items-center gap-2 text-blue-300 mb-2">
                 <Tag className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold uppercase tracking-wider">Course Code</span>
+                <span className="text-xs font-semibold uppercase tracking-wider">
+                  Course Code
+                </span>
               </div>
               <p className="text-sm text-white">{preprint.course_code}</p>
             </div>
@@ -104,14 +170,18 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
           <div className="glass-effect border-white/20 rounded-lg p-4 hover:border-blue-400/50 hover:bg-blue-500/5 transition-all group">
             <div className="flex items-center gap-2 text-blue-300 mb-2">
               <Calendar className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Uploaded</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                Uploaded
+              </span>
             </div>
             <p className="text-sm text-white">{formatDate(preprint.uploaded_at)}</p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Abstract</h2>
+          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            Abstract
+          </h2>
           <div className="glass-effect border-white/20 rounded-lg p-5 max-h-48 overflow-y-auto">
             <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
               {preprint.abstract}
@@ -146,7 +216,6 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
       {showPdfViewer && pdfUrl && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 scale-in">
           <div className="glass-effect border-white/20 rounded-lg w-full h-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl shadow-black/50">
-
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-gray-900/50 to-transparent">
               <h3 className="font-semibold text-white">PDF Viewer</h3>
               <button
@@ -164,7 +233,6 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
                 title="PDF Viewer"
               />
             </div>
-
           </div>
         </div>
       )}
