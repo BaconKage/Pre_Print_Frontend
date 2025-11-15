@@ -36,7 +36,7 @@ export async function fetchPreprints(params?: Record<string, string>): Promise<P
 
   const res = await fetch(url.toString());
   if (!res.ok) {
-    throw new Error('Failed to fetch preprints');
+    throw new Error("Failed to fetch preprints");
   }
 
   return res.json();
@@ -45,7 +45,7 @@ export async function fetchPreprints(params?: Record<string, string>): Promise<P
 export async function fetchPreprintById(id: number): Promise<Preprint> {
   const res = await fetch(`${API_BASE}/preprints/${id}/`);
   if (!res.ok) {
-    throw new Error('Failed to fetch preprint');
+    throw new Error("Failed to fetch preprint");
   }
 
   return res.json();
@@ -73,4 +73,27 @@ export async function uploadPreprint(formValues: UploadFormData): Promise<Prepri
   }
 
   return res.json();
+}
+
+/* ---------------------------------------------------
+   🔥 NEW FUNCTION: deletePreprint (Admin Only)
+--------------------------------------------------- */
+export async function deletePreprint(id: number): Promise<void> {
+  const adminKey = import.meta.env.VITE_ADMIN_KEY;
+
+  if (!adminKey) {
+    throw new Error("VITE_ADMIN_KEY is not set in frontend environment");
+  }
+
+  const res = await fetch(`${API_BASE}/admin/preprints/${id}/`, {
+    method: "DELETE",
+    headers: {
+      "X-ADMIN-KEY": adminKey,
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(`Delete failed: ${res.status} ${err}`);
+  }
 }
