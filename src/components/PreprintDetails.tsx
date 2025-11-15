@@ -22,7 +22,11 @@ interface PreprintDetailsProps {
   onDeleted?: (id: number) => void;
 }
 
-export default function PreprintDetails({ preprint, adminKey, onDeleted }: PreprintDetailsProps) {
+export default function PreprintDetails({
+  preprint,
+  adminKey,
+  onDeleted,
+}: PreprintDetailsProps) {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -58,16 +62,21 @@ export default function PreprintDetails({ preprint, adminKey, onDeleted }: Prepr
     ? preprint.pdf_file.replace('http://', 'https://')
     : null;
 
+  /** 🔐 Admin-only delete handler */
   const handleDelete = async () => {
     if (!adminKey) return;
+
     const sure = window.confirm(
-      `Delete "${preprint.title}"?\nThis will permanently remove the entry and its PDF.`
+      `Delete "${preprint.title}"?\nThis will permanently remove the entry and its PDF.`,
     );
     if (!sure) return;
 
     try {
       setDeleting(true);
-      const res = await fetch(`${API_BASE}/api/admin/preprints/${preprint.id}/`, {
+
+      // IMPORTANT: API_BASE already includes /api in production,
+      // so we do NOT add another /api here.
+      const res = await fetch(`${API_BASE}/admin/preprints/${preprint.id}/`, {
         method: 'DELETE',
         headers: {
           'X-ADMIN-KEY': adminKey,
@@ -79,10 +88,13 @@ export default function PreprintDetails({ preprint, adminKey, onDeleted }: Prepr
         throw new Error(data.error || 'Failed to delete preprint');
       }
 
+      // Let parent remove it from the list
       onDeleted?.(preprint.id);
       setShowPdfViewer(false);
     } catch (err: any) {
       alert(err?.message || 'Error deleting preprint');
+      // Also log for debugging
+      console.error('Delete error:', err);
     } finally {
       setDeleting(false);
     }
@@ -92,9 +104,24 @@ export default function PreprintDetails({ preprint, adminKey, onDeleted }: Prepr
     <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-950">
       <div className="p-6 space-y-6 slide-in">
         <div className="space-y-3">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-blue-100 bg-clip-text text-transparent leading-tight">
-            {preprint.title}
-          </h1>
+          <div className="flex items-start gap-3">
+            <h1 className="flex-1 text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-blue-100 bg-clip-text text-transparent leading-tight">
+              {preprint.title}
+            </h1>
+
+            {/* 🔐 Admin-only delete pill */}
+            {adminKey && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] text-red-200 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              >
+                <Trash2 className="w-3 h-3" />
+                {deleting ? 'Deleting…' : 'Delete preprint'}
+              </button>
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-200 px-3 py-1.5 rounded-full border border-blue-500/40 font-medium shadow-sm shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 transition-all">
@@ -114,19 +141,6 @@ export default function PreprintDetails({ preprint, adminKey, onDeleted }: Prepr
             <span className="text-xs bg-gradient-to-r from-orange-500/30 to-amber-600/20 text-orange-200 px-3 py-1.5 rounded-full border border-orange-500/40 capitalize font-medium shadow-sm shadow-orange-500/10">
               {preprint.status}
             </span>
-
-            {/* 🔐 Admin-only delete pill (top-rightish, subtle) */}
-            {adminKey && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="ml-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] text-red-200 bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 hover:border-red-400/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-              >
-                <Trash2 className="w-3 h-3" />
-                {deleting ? 'Deleting…' : 'Delete preprint'}
-              </button>
-            )}
           </div>
         </div>
 
