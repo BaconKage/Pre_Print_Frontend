@@ -26,21 +26,20 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
     );
   }
 
-  // ✅ Force HTTPS for PDF URL to avoid mixed-content blocking
-  const pdfUrl = preprint.pdf_file
-    ? preprint.pdf_file.replace(/^http:\/\//, 'https://')
-    : null;
-
+  /** ✅ LOCAL DATE (NO TIME) */
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
+
+  /** ✅ ENSURE PDF URL IS HTTPS */
+  const pdfUrl = preprint.pdf_file
+    ? preprint.pdf_file.replace("http://", "https://")
+    : null;
 
   return (
     <div className="h-full overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-950">
@@ -54,14 +53,17 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             <span className="text-xs bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-200 px-3 py-1.5 rounded-full border border-blue-500/40 font-medium shadow-sm shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 transition-all">
               {preprint.category.toUpperCase()}
             </span>
+
             {preprint.doi && (
               <span className="text-xs bg-gradient-to-r from-green-500/30 to-emerald-600/20 text-green-200 px-3 py-1.5 rounded-full border border-green-500/40 font-medium shadow-sm shadow-green-500/10">
                 DOI: {preprint.doi}
               </span>
             )}
+
             <span className="text-xs bg-gradient-to-r from-gray-600/30 to-gray-700/20 text-gray-200 px-3 py-1.5 rounded-full border border-gray-600/40 font-medium">
               v{preprint.version}
             </span>
+
             <span className="text-xs bg-gradient-to-r from-orange-500/30 to-amber-600/20 text-orange-200 px-3 py-1.5 rounded-full border border-orange-500/40 capitalize font-medium shadow-sm shadow-orange-500/10">
               {preprint.status}
             </span>
@@ -127,6 +129,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
               <ExternalLink className="w-4 h-4 relative group-hover:rotate-12 transition-transform" />
               <span className="relative">View PDF</span>
             </button>
+
             <a
               href={pdfUrl}
               download
@@ -143,6 +146,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
       {showPdfViewer && pdfUrl && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 scale-in">
           <div className="glass-effect border-white/20 rounded-lg w-full h-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl shadow-black/50">
+
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-gray-900/50 to-transparent">
               <h3 className="font-semibold text-white">PDF Viewer</h3>
               <button
@@ -152,13 +156,15 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
             <div className="flex-1 overflow-hidden">
               <iframe
-                src={pdfUrl}
+                src={`${pdfUrl}#toolbar=0`}
                 className="w-full h-full"
                 title="PDF Viewer"
               />
             </div>
+
           </div>
         </div>
       )}
