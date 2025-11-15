@@ -6,6 +6,63 @@ import PreprintDetails from './components/PreprintDetails';
 import UploadModal from './components/UploadModal';
 import { Preprint, fetchPreprints } from './api/preprints';
 
+/* ---------- Small inline component for secret admin key ---------- */
+function AdminLoginBox({
+  adminKey,
+  onLogin,
+  onLogout,
+}: {
+  adminKey: string | null;
+  onLogin: (key: string) => void;
+  onLogout: () => void;
+}) {
+  const [value, setValue] = useState('');
+
+  if (adminKey) {
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/40">
+          Admin mode
+        </span>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="text-red-400 hover:text-red-300 hover:underline"
+        >
+          Exit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="flex items-center gap-2 text-xs"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (value.trim()) {
+          onLogin(value.trim());
+          setValue('');
+        }
+      }}
+    >
+      <input
+        type="password"
+        placeholder="Admin key"
+        className="glass-effect border-white/20 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500/50 placeholder-gray-500 hover:border-white/40 transition-all"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
+      <button
+        type="submit"
+        className="rounded-md bg-slate-800/80 hover:bg-slate-700 text-xs px-2 py-1 border border-white/10"
+      >
+        Admin
+      </button>
+    </form>
+  );
+}
+
 function App() {
   const [preprints, setPreprints] = useState<Preprint[]>([]);
   const [selectedPreprint, setSelectedPreprint] = useState<Preprint | null>(null);
@@ -14,6 +71,31 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // 🔐 secret admin key (for delete)
+  const [adminKey, setAdminKey] = useState<string | null>(null);
+
+  // Load admin key from localStorage (only on client)
+  useEffect(() => {
+    const saved = typeof window !== 'undefined'
+      ? window.localStorage.getItem('rvu_admin_key')
+      : null;
+    if (saved) setAdminKey(saved);
+  }, []);
+
+  const handleAdminLogin = (key: string) => {
+    setAdminKey(key);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('rvu_admin_key', key);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setAdminKey(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('rvu_admin_key');
+    }
+  };
 
   const loadPreprints = async () => {
     setLoading(true);
@@ -25,6 +107,12 @@ function App() {
 
       const data = await fetchPreprints(params);
       setPreprints(data);
+
+      // keep selected preprint in sync if it still exists
+      if (selectedPreprint) {
+        const updated = data.find((p) => p.id === selectedPreprint.id) || null;
+        setSelectedPreprint(updated);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load preprints');
     } finally {
@@ -34,12 +122,21 @@ function App() {
 
   useEffect(() => {
     loadPreprints();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory]);
 
   const handleUploadSuccess = (newPreprint: Preprint) => {
     setIsUploadModalOpen(false);
     loadPreprints();
     setSelectedPreprint(newPreprint);
+  };
+
+  // Called after a successful admin delete
+  const handleDeleted = (id: number) => {
+    setPreprints((prev) => prev.filter((p) => p.id !== id));
+    if (selectedPreprint?.id === id) {
+      setSelectedPreprint(null);
+    }
   };
 
   return (
@@ -80,6 +177,13 @@ function App() {
               <Upload className="w-4 h-4 relative group-hover:scale-110 transition-transform" />
               <span className="relative">Upload</span>
             </button>
+
+            {/* 🔐 Secret admin UI – only useful if you know the ADMIN_SECRET */}
+            <AdminLoginBox
+              adminKey={adminKey}
+              onLogin={handleAdminLogin}
+              onLogout={handleAdminLogout}
+            />
           </div>
         </header>
 
@@ -112,7 +216,11 @@ function App() {
               )}
 
               {!loading && !error && preprints.map((preprint, idx) => (
-                <div key={preprint.id} style={{ animationDelay: `${idx * 50}ms` }} className="animate-[slideIn_0.4s_ease-out_forwards]">
+                <div
+                  key={preprint.id}
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                  className="animate-[slideIn_0.4s_ease-out_forwards]"
+                >
                   <PreprintCard
                     preprint={preprint}
                     isSelected={selectedPreprint?.id === preprint.id}
@@ -124,7 +232,11 @@ function App() {
           </div>
 
           <div className="w-1/2 overflow-y-auto">
-            <PreprintDetails preprint={selectedPreprint} />
+            <PreprintDetails
+              preprint={selectedPreprint}
+              adminKey={adminKey}
+              onDeleted={handleDeleted}
+            />
           </div>
         </div>
       </div>
