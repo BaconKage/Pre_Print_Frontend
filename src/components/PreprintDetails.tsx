@@ -26,6 +26,11 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
     );
   }
 
+  // ✅ Force HTTPS for PDF URL to avoid mixed-content blocking
+  const pdfUrl = preprint.pdf_file
+    ? preprint.pdf_file.replace(/^http:\/\//, 'https://')
+    : null;
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -112,7 +117,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
           </div>
         </div>
 
-        {preprint.pdf_file && (
+        {pdfUrl && (
           <div className="flex gap-3 sticky bottom-0 py-4 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent">
             <button
               onClick={() => setShowPdfViewer(true)}
@@ -123,7 +128,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
               <span className="relative">View PDF</span>
             </button>
             <a
-              href={preprint.pdf_file}
+              href={pdfUrl}
               download
               className="flex-1 group relative overflow-hidden rounded-lg bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white px-4 py-3 flex items-center justify-center gap-2 font-semibold transition-all shadow-lg shadow-gray-900/50 hover:shadow-xl hover:shadow-gray-900/70 button-press"
             >
@@ -135,7 +140,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
         )}
       </div>
 
-      {showPdfViewer && preprint.pdf_file && (
+      {showPdfViewer && pdfUrl && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 scale-in">
           <div className="glass-effect border-white/20 rounded-lg w-full h-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl shadow-black/50">
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-gray-900/50 to-transparent">
@@ -149,7 +154,7 @@ export default function PreprintDetails({ preprint }: PreprintDetailsProps) {
             </div>
             <div className="flex-1 overflow-hidden">
               <iframe
-                src={preprint.pdf_file}
+                src={pdfUrl}
                 className="w-full h-full"
                 title="PDF Viewer"
               />
