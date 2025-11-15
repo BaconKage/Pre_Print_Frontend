@@ -26,7 +26,12 @@ export interface UploadFormData {
   pdfFile: File;
 }
 
-export async function fetchPreprints(params?: Record<string, string>): Promise<Preprint[]> {
+/* ---------------------------------------------------
+   ✅ fetchPreprints — with retry logic for Render cold starts
+--------------------------------------------------- */
+export async function fetchPreprints(
+  params?: Record<string, string>
+): Promise<Preprint[]> {
   const url = new URL(`${API_BASE}/preprints/`);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -34,14 +39,33 @@ export async function fetchPreprints(params?: Record<string, string>): Promise<P
     });
   }
 
-  const res = await fetch(url.toString());
-  if (!res.ok) {
-    throw new Error("Failed to fetch preprints");
+  // Retry up to 4 times if Render backend is cold-starting
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (res.ok) {
+        return res.json();
+      }
+
+      if (attempt === 4) {
+        throw new Error("Failed after retries: could not fetch preprints.");
+      }
+    } catch {
+      console.warn(`Backend cold — retrying (${attempt}/4)...`);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
   }
 
-  return res.json();
+  throw new Error("Server still starting. Try again in a moment.");
 }
 
+/* ---------------------------------------------------
+   Get one preprint by ID
+--------------------------------------------------- */
 export async function fetchPreprintById(id: number): Promise<Preprint> {
   const res = await fetch(`${API_BASE}/preprints/${id}/`);
   if (!res.ok) {
@@ -51,7 +75,12 @@ export async function fetchPreprintById(id: number): Promise<Preprint> {
   return res.json();
 }
 
-export async function uploadPreprint(formValues: UploadFormData): Promise<Preprint> {
+/* ---------------------------------------------------
+   Upload a new preprint
+--------------------------------------------------- */
+export async function uploadPreprint(
+  formValues: UploadFormData
+): Promise<Preprint> {
   const fd = new FormData();
   fd.append("title", formValues.title);
   fd.append("abstract", formValues.abstract);
@@ -76,13 +105,13 @@ export async function uploadPreprint(formValues: UploadFormData): Promise<Prepri
 }
 
 /* ---------------------------------------------------
-   🔥 NEW FUNCTION: deletePreprint (Admin Only)
+   🔥 deletePreprint (Admin Only)
 --------------------------------------------------- */
 export async function deletePreprint(id: number): Promise<void> {
   const adminKey = import.meta.env.VITE_ADMIN_KEY;
 
   if (!adminKey) {
-    throw new Error("VITE_ADMIN_KEY is not set in frontend environment");
+    throw new Error("VITE_ADMIN_KEY is not set in frontend .env");
   }
 
   const res = await fetch(`${API_BASE}/admin/preprints/${id}/`, {
