@@ -15,7 +15,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="text-lg font-bold bg-gradient-to-r from-blue-300 to-blue-500 bg-clip-text text-transparent">
-              RVU Preprints
+              OpenArc Preprints
             </h1>
           </div>
         </div>
