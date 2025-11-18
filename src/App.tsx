@@ -271,8 +271,8 @@ function App() {
               className="text-xs rounded-lg bg-black/40 border border-white/10 px-3 py-2 focus:outline-none focus:border-emerald-500/80 focus:ring-2 focus:ring-emerald-500/30 text-gray-100"
             >
               <option value="all">All Categories</option>
-              <option value="FDS">Fundamentals of Data Science</option>
-              <option value="FDE">Fundamentals of Data Engineering</option>
+              <option value="FDS">Data Science</option>
+              <option value="FDE">Cyber Security</option>
               <option value="TOC">Theory of Computation</option>
               <option value="OS">Operating Systems</option>
               <option value="CN">Computer Networks</option>
