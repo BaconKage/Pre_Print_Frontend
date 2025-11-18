@@ -33,7 +33,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-white/10 bg-gradient-to-t from-blue-950/20 to-transparent">
-        <p className="text-xs text-gray-500 text-center">Built for RVU internal papers</p>
+        <p className="text-xs text-gray-500 text-center">By Shubhang Srinivas Varda and Joshua Jesuraj Sanctus</p>
       </div>
     </aside>
   );
