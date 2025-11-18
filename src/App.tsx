@@ -238,7 +238,9 @@ function App() {
             <span>Sign in with RVU Google</span>
           </button>
 
-          <p className="text-xs text-gray-500">Access is restricted to RV University email IDs only.</p>
+          <p className="text-xs text-gray-500">
+            Access is restricted to RV University email IDs only.
+          </p>
         </div>
       </div>
     );
@@ -294,7 +296,9 @@ function App() {
           </div>
         </header>
 
-        <div className="flex-1 grid grid-cols-2 gap-4 p-6">
+        {/* ---------- FIXED LAYOUT BLOCK ---------- */}
+        <div className="flex-1 grid grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)] gap-4 p-6">
+          {/* Left column: list */}
           <div className="space-y-3">
             {loading && (
               <div className="bg-black/40 border border-white/10 rounded-2xl p-8 flex items-center justify-center">
@@ -313,7 +317,9 @@ function App() {
 
             {!loading && !error && preprints.length === 0 && (
               <div className="text-center py-12 bg-black/30 border border-white/5 rounded-2xl">
-                <p className="text-gray-400 text-sm">No preprints found. Try adjusting your search.</p>
+                <p className="text-gray-400 text-sm">
+                  No preprints found. Try adjusting your search.
+                </p>
               </div>
             )}
 
@@ -335,7 +341,8 @@ function App() {
             </div>
           </div>
 
-          <div className="w-1/2 overflow-y-auto">
+          {/* Right column: details – full width of its column */}
+          <div className="overflow-y-auto max-h-[calc(100vh-180px)]">
             <PreprintDetails
               preprint={selectedPreprint}
               adminKey={adminKey}
@@ -343,13 +350,11 @@ function App() {
             />
           </div>
         </div>
+        {/* ---------- END FIXED LAYOUT BLOCK ---------- */}
       </div>
 
       {isUploadModalOpen && (
-        <UploadModal
-          onClose={() => setIsUploadModalOpen(false)}
-          onSuccess={handleUploadSuccess}
-        />
+        <UploadModal onClose={() => setIsUploadModalOpen(false)} onSuccess={handleUploadSuccess} />
       )}
     </div>
   );
