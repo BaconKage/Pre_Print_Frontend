@@ -163,7 +163,7 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full glass-effect border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 input-glow"
+                  className="w-full glass-effect border-white/20 rounded-lg px-4 py-3 text-white bg-gray-900/80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 input-glow [&>option]:bg-gray-900 [&>option]:text-white"
                 >
                   <option value="FDS">Data Science</option>
                   <option value="FDE">Data Engineering</option>
