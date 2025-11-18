@@ -1,4 +1,4 @@
-const API_BASE = "https://rvu-preprints-api.onrender.com/api";
+export const API_BASE = "https://rvu-preprints-api.onrender.com/api";
 
 export interface Preprint {
   id: number;
