@@ -10,11 +10,7 @@ import {
   X,
   Trash2,
 } from 'lucide-react';
-import { Preprint } from '../api/preprints';
-
-const API_BASE =
-  import.meta.env.VITE_API_URL?.toString().replace(/\/+$/, '') ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
+import { Preprint, API_BASE } from '../api/preprints';
 
 interface PreprintDetailsProps {
   preprint: Preprint | null;
@@ -74,8 +70,7 @@ export default function PreprintDetails({
     try {
       setDeleting(true);
 
-      // IMPORTANT: API_BASE already includes /api in production,
-      // so we do NOT add another /api here.
+      // Use the backend API base (includes /api)
       const res = await fetch(`${API_BASE}/admin/preprints/${preprint.id}/`, {
         method: 'DELETE',
         headers: {
@@ -93,7 +88,6 @@ export default function PreprintDetails({
       setShowPdfViewer(false);
     } catch (err: any) {
       alert(err?.message || 'Error deleting preprint');
-      // Also log for debugging
       console.error('Delete error:', err);
     } finally {
       setDeleting(false);
