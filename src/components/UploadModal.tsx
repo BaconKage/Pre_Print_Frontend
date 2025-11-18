@@ -13,7 +13,8 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
     authors: '',
     faculty: '',
     courseCode: '',
-    category: 'cs',
+    // 🔹 Default category
+    category: 'FDS',
     abstract: '',
     mintDoi: false,
   });
@@ -154,6 +155,7 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
                 />
               </div>
 
+              {/* 🔹 Updated Category only */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-300">
                   Category
@@ -163,14 +165,17 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   className="w-full glass-effect border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 input-glow"
                 >
-                  <option value="cs">Data Science</option>
-                  <option value="ai">AI / ML</option>
-                  <option value="math">Mathematics</option>
-                  <option value="physics">Physics</option>
-                  <option value="cloud">Cloud</option>
-                  <option value="cybersec">Cyber Security</option>
+                  <option value="FDS">Data Science</option>
+                  <option value="FDE">Data Engineering</option>
+                  <option value="TOC">Theory of Computation</option>
+                  <option value="OS">Operating Systems</option>
+                  <option value="CN">Computer Networks</option>
+                  <option value="ML">Machine Learning</option>
+                  <option value="CS">Cyber Security</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
+              {/* 🔹 End Category */}
             </div>
 
             <div className="space-y-2">
@@ -205,7 +210,11 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
                   className="flex items-center justify-center gap-3 w-full glass-effect border-2 border-dashed border-white/20 group-hover:border-blue-400/50 rounded-lg px-4 py-6 cursor-pointer transition-all group-hover:bg-blue-500/5"
                 >
                   <Upload className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors group-hover:scale-110" />
-                  <span className={`${pdfFile ? 'text-green-400 font-medium' : 'text-gray-400'} transition-colors`}>
+                  <span
+                    className={`${
+                      pdfFile ? 'text-green-400 font-medium' : 'text-gray-400'
+                    } transition-colors`}
+                  >
                     {pdfFile ? pdfFile.name : 'Click to upload PDF'}
                   </span>
                 </label>
@@ -220,7 +229,10 @@ export default function UploadModal({ onClose, onSuccess }: UploadModalProps) {
                 onChange={(e) => setFormData({ ...formData, mintDoi: e.target.checked })}
                 className="w-4 h-4 rounded border-white/30 bg-white/5 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
               />
-              <label htmlFor="mint-doi" className="text-sm text-gray-300 cursor-pointer flex-1 group-hover:text-gray-200 transition-colors">
+              <label
+                htmlFor="mint-doi"
+                className="text-sm text-gray-300 cursor-pointer flex-1 group-hover:text-gray-200 transition-colors"
+              >
                 Mint fake DOI for this upload
               </label>
             </div>
